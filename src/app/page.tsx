@@ -1,101 +1,93 @@
-import Image from "next/image";
+import { useState } from "react";
+import useCharacters from "./hooks/useCharacters";
+import Link from "next/link";
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+const Home = () => {
+    const [filters, setFilters] = useState({
+        name: "",
+        status: "",
+        species: "",
+        gender: "",
+        page: 1,
+    });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    const { characters, loading, error, totalPages } = useCharacters(filters);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setFilters({
+            ...filters,
+            [e.target.name]: e.target.value,
+            page: 1,  // Resetar para a primeira página em cada filtro
+        });
+    };
+
+    const changePage = (newPage: number) => {
+        setFilters((prevFilters) => ({ ...prevFilters, page: newPage }));
+    };
+
+    return (
+        <div className="container mx-auto p-4">
+            <h1 className="text-3xl font-bold mb-4">Personagens</h1>
+
+            {/* Filtros */}
+            <div className="mb-4 flex gap-4">
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Nome"
+                    value={filters.name}
+                    onChange={handleInputChange}
+                    className="border p-2"
+                />
+                <select name="status" value={filters.status} onChange={handleInputChange} className="border p-2">
+                    <option value="">Status</option>
+                    <option value="Alive">Alive</option>
+                    <option value="Dead">Dead</option>
+                    <option value="unknown">Unknown</option>
+                </select>
+                <select name="species" value={filters.species} onChange={handleInputChange} className="border p-2">
+                    <option value="">Espécie</option>
+                    <option value="Human">Human</option>
+                    <option value="Alien">Alien</option>
+                </select>
+                <select name="gender" value={filters.gender} onChange={handleInputChange} className="border p-2">
+                    <option value="">Gênero</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+
+            {/* Lista de Personagens */}
+            {loading ? (
+                <p>Carregando...</p>
+            ) : error ? (
+                <p>{error}</p>
+            ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {characters.map((character) => (
+                        <div key={character.id} className="border p-4 rounded">
+                            <img src={character.image} alt={character.name} className="w-full h-40 object-cover rounded" />
+                            <h2 className="text-lg font-bold">{character.name}</h2>
+                            <p>Status: {character.status}</p>
+                            <p>Espécie: {character.species}</p>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Paginação */}
+            <div className="mt-4 flex justify-center">
+                <button onClick={() => changePage(filters.page - 1)} disabled={filters.page === 1} className="p-2 mx-1">
+                    Anterior
+                </button>
+                <span>{filters.page} / {totalPages}</span>
+                <button onClick={() => changePage(filters.page + 1)} disabled={filters.page === totalPages} className="p-2 mx-1">
+                    Próxima
+                </button>
+            </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
-}
+    );
+};
+
+export default Home;
+
